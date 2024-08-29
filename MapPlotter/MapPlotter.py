@@ -771,7 +771,7 @@ class MapPlotter():
 		self._plot = self._ax.contour(lon,lat,data,levels,
 					cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
 					norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-					linewidth=linewidth,
+					linewidths=linewidth,
 					alpha=params['alpha'],
 					transform=transform
 					 		 )
