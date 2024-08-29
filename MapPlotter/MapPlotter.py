@@ -731,7 +731,7 @@ class MapPlotter():
 
 		return self._fig
 
-	def contour(self,lon,lat,data,levels=None,labelsize=None,params=None,clear=True,projection='PlateCarree',**kwargs):
+	def contour(self,lon,lat,data,levels=10,labelsize=None,linewidth=None,params=None,clear=True,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
@@ -740,7 +740,8 @@ class MapPlotter():
 			> lon:        Longitude vector or matrix
 			> lat:        Latitude vector or matrix
 			> data:       Data matrix
-			> levels:     (Optional) Determines the number and positions of the contour lines / regions.
+			> levels:     Number and positions of the contour lines / regions
+			> linewidth:  (Optional) The line width of the contour lines
 			> labelsize:  (Optional) Label font size for contour plot
 			> params:     (Optional) Parameter dictionary
 			> clear:      (Optional) Clear axes before plotting
@@ -770,6 +771,7 @@ class MapPlotter():
 		self._plot = self._ax.contour(lon,lat,data,levels,
 					cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
 					norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
+					linewidth=linewidth,
 					alpha=params['alpha'],
 					transform=transform
 					 		 )
