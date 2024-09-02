@@ -24,7 +24,7 @@ jobs:
       # Run compilation and deployment
       - name: Set up dependencies
         run: |
-          sudo apt install libgeos-dev libproj-dev
+          sudo apt install python3.8-distutils libgeos-dev libproj-dev
           make requirements
           pip install --ignore-installed --no-binary :all: shapely
       - name: Install
