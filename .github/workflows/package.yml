@@ -29,7 +29,7 @@ jobs:
         sudo apt install libgeos-dev libproj-dev
         pip install build
         make requirements
-        pip install --force-reinstall --no-binary :all: shapely
+        pip install --ignore-installed --no-binary :all: shapely==2.0.4
     - name: Build package
       run: |
         make package-build
