@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo apt install libgeos-dev libproj-dev
           make requirements
-          pip install --force-reinstall --no-binary :all: shapely
+          pip install --force-reinstall --no-binary :all: shapely==2.0.4
       - name: Install
         run: make install
         # Run Examples
