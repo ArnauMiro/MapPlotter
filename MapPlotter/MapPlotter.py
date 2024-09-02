@@ -260,7 +260,7 @@ class MapPlotter():
 			> ylim:             Minimum and maximum extend for the y axis (default: [-90,90])
 			> top:              Display labels at the top (default: False)
 			> right:            Display labels at the right (default: False)
-			> max_div:          Maximum number of divisions on the axes (defaut: False).
+			> max_div:          Maximum number of divisions on the axes (defaut: 4).
 			> style:            Style dictionary for the axis labels.
 			> gridlines_kwargs: Extra gridlines arguments dictionary.
 
