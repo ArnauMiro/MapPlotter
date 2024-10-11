@@ -205,7 +205,7 @@ class MapPlotter():
 		if self._fig and self._ax:# and self._plot:
 			self._fig.savefig(filename,dpi=dpi,bbox_inches=margin)
 
-	def clear():
+	def clear(self):
 		'''
 		Wrapper to matplotlib.pyplot.clf()
 		'''
