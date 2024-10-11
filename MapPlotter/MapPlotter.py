@@ -415,8 +415,9 @@ class MapPlotter():
 		'''
 		Draw a tile using a cartopy tile service
 		'''
-		tile = getattr(cimgt,kind['tile'])(**kind['arguments'])
-		self._ax.add_image(tile,zoom)
+		if self._ax:
+			tile = getattr(cimgt,kind['tile'])(**kind['arguments'])
+			self._ax.add_image(tile,zoom)
 
 	def setColormap(self,cmap='coolwarm',ncol=256):
 		'''
