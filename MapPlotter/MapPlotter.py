@@ -205,7 +205,7 @@ class MapPlotter():
 		if self._fig and self._ax:# and self._plot:
 			self._fig.savefig(filename,dpi=dpi,bbox_inches=margin)
 
-	def clear():
+	def clear(self):
 		'''
 		Wrapper to matplotlib.pyplot.clf()
 		'''
@@ -260,7 +260,7 @@ class MapPlotter():
 			> ylim:             Minimum and maximum extend for the y axis (default: [-90,90])
 			> top:              Display labels at the top (default: False)
 			> right:            Display labels at the right (default: False)
-			> max_div:          Maximum number of divisions on the axes (defaut: False).
+			> max_div:          Maximum number of divisions on the axes (defaut: 4).
 			> style:            Style dictionary for the axis labels.
 			> gridlines_kwargs: Extra gridlines arguments dictionary.
 
@@ -388,7 +388,7 @@ class MapPlotter():
 			> img: URL or full path to a high resolution image.
 		'''
 		if self._ax:
-			if not img == None or img == '':
+			if not img is None or img == '':
 				transform  = getattr(ccrs,projection)(**kwargs)
 				# Use the transform to correct the extent
 				if not projection == 'PlateCarree':
@@ -415,8 +415,9 @@ class MapPlotter():
 		'''
 		Draw a tile using a cartopy tile service
 		'''
-		tile = getattr(cimgt,kind['tile'])(**kind['arguments'])
-		self._ax.add_image(tile,zoom)
+		if self._ax:
+			tile = getattr(cimgt,kind['tile'])(**kind['arguments'])
+			self._ax.add_image(tile,zoom)
 
 	def setColormap(self,cmap='coolwarm',ncol=256):
 		'''
@@ -481,7 +482,7 @@ class MapPlotter():
 			> Figure object
 		'''
 		if clear: self.clear
-		if params == None:
+		if params is None:
 			params = self.defaultParams()
 		# Do we have figure and axes?
 		if not params['fig'] and not params['ax']:
@@ -558,7 +559,7 @@ class MapPlotter():
 		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
 
 		# Set extend
-		if params['extend'] == None:
+		if params['extend'] is None:
 			params['extend'] = 'neither'
 			if (cbar_min > z_min):                      params['extend'] = 'min'
 			if (cbar_max < z_max):                      params['extend'] = 'max'
@@ -702,7 +703,7 @@ class MapPlotter():
 		if len(data) == 0 : 
 			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size)
 		else:
-			self._plot = self._ax.scatter(xc,yc, transform=transform, marker=marker,s=size,
+			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size,
 											c=data,
 											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
 											norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
@@ -719,6 +720,94 @@ class MapPlotter():
 							 	tick_font=params['tick_font'],
 							 	label=params['label']
 								)
+		return self._fig
+
+	def line(self,xc,yc,fmt='-',params=None,clear=True,size=None,projection='PlateCarree',**kwargs):
+		'''
+		Main plotting function. Plots given the longitude, latitude and data.
+		An optional params dictionary can be inputted to control the plot.
+
+		Inputs:
+			> xc:     Scatter x points
+			> yc:     Scatter y points
+			> data:   Color data to be plotted
+			> params: Optional parameter dictionary
+			> clear:  Clear axes before plotting
+			> marker: Marker for scatter plot
+			> size:   Size for the scatter plot
+
+		Outputs:
+			> Figure object
+		'''
+		self.plot_empty(params=params,clear=clear)
+
+		# Plot
+		transform  = getattr(ccrs,projection)(**kwargs)
+		self._plot = self._ax.plot(xc,yc,fmt,transform=transform,s=size)
+
+		return self._fig
+
+	def contour(self,lon,lat,data,levels=10,labelsize=None,linewidth=None,params=None,clear=True,projection='PlateCarree',**kwargs):
+		'''
+		Main plotting function. Plots given the longitude, latitude and data.
+		An optional params dictionary can be inputted to control the plot.
+
+		Inputs:
+			> lon:        Longitude vector or matrix
+			> lat:        Latitude vector or matrix
+			> data:       Data matrix
+			> levels:     Number and positions of the contour lines / regions
+			> linewidth:  (Optional) The line width of the contour lines
+			> labelsize:  (Optional) Label font size for contour plot
+			> params:     (Optional) Parameter dictionary
+			> clear:      (Optional) Clear axes before plotting
+			> Projection: Type of projection that the data is
+						  using (default assumes PlateCarree)
+
+		Outputs:
+			> Figure object
+		'''
+		self.plot_empty(params=params,clear=clear)
+
+		# Set maximum and minimum
+		z_min, z_max = np.nanmin(data), np.nanmax(data)
+		
+		cbar_min = params['bounds'][0] if params['bounds'][0] >= -1e20 else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
+
+		# Set extend
+		if params['extend'] is None:
+			params['extend'] = 'neither'
+			if (cbar_min > z_min):                      params['extend'] = 'min'
+			if (cbar_max < z_max):                      params['extend'] = 'max'
+			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
+
+		# Plot
+		transform  = getattr(ccrs,projection)(**kwargs)
+		self._plot = self._ax.contour(lon,lat,data,levels,
+					cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
+					norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
+					linewidths=linewidth,
+					alpha=params['alpha'],
+					transform=transform
+					 		 )
+		
+		# Contour plot labels
+		if not labelsize is None:
+			self._ax.clabel(self._plot, inline=True, fontsize=labelsize)
+
+		# Colorbar
+		if params['draw_cbar']:
+			self.setColorbar(orientation=params['orientation'],
+							 extend=params['extend'],
+							 shrink=params['shrink'],
+							 aspect=params['aspect'],
+							 numticks=params['numticks'],
+							 tick_format=params['tick_format'],
+							 tick_font=params['tick_font'],
+							 label=params['label']
+							)
+
 		return self._fig
 
 	def quiver(self,xc,yc,uc,vc,dsample=1,data=None,params=None,clear=True,scale=None,color=None,projection='PlateCarree',**kwargs):
