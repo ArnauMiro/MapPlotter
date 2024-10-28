@@ -684,6 +684,19 @@ class MapPlotter():
 		'''
 		self.plot_empty(params=params,clear=clear)
 
+		# Set maximum and minimum
+		z_min, z_max = np.nanmin(data), np.nanmax(data)
+		
+		cbar_min = params['bounds'][0] if params['bounds'][0] >= -1e20 else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
+
+		# Set extend
+		if params['extend'] == None:
+			params['extend'] = 'neither'
+			if (cbar_min > z_min):                      params['extend'] = 'min'
+			if (cbar_max < z_max):                      params['extend'] = 'max'
+			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
+
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
 		if len(data) == 0 : 
@@ -691,7 +704,9 @@ class MapPlotter():
 		else:
 			self._plot = self._ax.scatter(xc,yc, transform=transform, marker=marker,s=size,
 											c=data,
-											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']))
+											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
+											norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
+										  )
 			params['extend'] = 'neither'
 			# Colorbar
 			if params['draw_cbar']:
