@@ -137,7 +137,7 @@ class MapPlotter():
 			'extend'      : None,
 			'shrink'      : 1.0,
 			'aspect'      : 20.,
-			'bounds'      : [-1e30, 1e30], # [min,max]
+			'bounds'      : [None, None], # [min,max]
 			'numticks'    : 10,
 			'tick_format' : '%.2f',
 			'tick_font'   : None,
@@ -555,8 +555,8 @@ class MapPlotter():
 		# Set maximum and minimum
 		z_min, z_max = np.nanmin(data), np.nanmax(data)
 		
-		cbar_min = params['bounds'][0] if params['bounds'][0] >= -1e20 else z_min
-		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
+		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
 
 		# Set extend
 		if params['extend'] is None:
@@ -688,11 +688,11 @@ class MapPlotter():
 		# Set maximum and minimum
 		z_min, z_max = np.nanmin(data), np.nanmax(data)
 		
-		cbar_min = params['bounds'][0] if params['bounds'][0] >= -1e20 else z_min
-		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
+		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
 
 		# Set extend
-		if params['extend'] == None:
+		if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
 			params['extend'] = 'neither'
 			if (cbar_min > z_min):                      params['extend'] = 'min'
 			if (cbar_max < z_max):                      params['extend'] = 'max'
@@ -707,8 +707,7 @@ class MapPlotter():
 											c=data,
 											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
 											norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-										  )
-			params['extend'] = 'neither'
+										 )
 			# Colorbar
 			if params['draw_cbar']:
 				self.setColorbar(orientation=params['orientation'],
@@ -772,11 +771,11 @@ class MapPlotter():
 		# Set maximum and minimum
 		z_min, z_max = np.nanmin(data), np.nanmax(data)
 		
-		cbar_min = params['bounds'][0] if params['bounds'][0] >= -1e20 else z_min
-		cbar_max = params['bounds'][1] if params['bounds'][1] <= 1e20  else z_max
+		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
 
 		# Set extend
-		if params['extend'] is None:
+		if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
 			params['extend'] = 'neither'
 			if (cbar_min > z_min):                      params['extend'] = 'min'
 			if (cbar_max < z_max):                      params['extend'] = 'max'
@@ -785,12 +784,12 @@ class MapPlotter():
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
 		self._plot = self._ax.contour(lon,lat,data,levels,
-					cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
-					norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-					linewidths=linewidth,
-					alpha=params['alpha'],
-					transform=transform
-					 		 )
+										cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
+										norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
+										linewidths=linewidth,
+										alpha=params['alpha'],
+										transform=transform
+					 				 )
 		
 		# Contour plot labels
 		if not labelsize is None:
@@ -810,7 +809,7 @@ class MapPlotter():
 
 		return self._fig
 
-	def quiver(self,xc,yc,uc,vc,dsample=1,data=None,params=None,clear=True,scale=None,color=None,projection='PlateCarree',**kwargs):
+	def quiver(self,xc,yc,uc,vc,dsample=1,data=np.array([]),params=None,clear=True,scale=None,color=None,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
@@ -831,19 +830,33 @@ class MapPlotter():
 		'''
 		self.plot_empty(params=params,clear=clear)
 
+		# Set maximum and minimum
+		z_min, z_max = np.nanmin(data), np.nanmax(data)
+		
+		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
+
+		# Set extend
+		if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
+			params['extend'] = 'neither'
+			if (cbar_min > z_min):                      params['extend'] = 'min'
+			if (cbar_max < z_max):                      params['extend'] = 'max'
+			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
+
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
-		if data is None: 
+		if len(data) == 0 : 
 			self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],
 										 transform=transform,scale=scale,color=color,
 										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']))
 		else:
 			self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],data[::dsample,::dsample],
 				                         transform=transform,scale=scale,
-										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']))
+										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
+										 norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
+										)
 
 			# Colorbar
-			#params['extend'] = 'neither'
 			if params['draw_cbar']:
 				self.setColorbar(orientation=params['orientation'],
 								 extend=params['extend'],
