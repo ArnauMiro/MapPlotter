@@ -685,24 +685,24 @@ class MapPlotter():
 		'''
 		self.plot_empty(params=params,clear=clear)
 
-		# Set maximum and minimum
-		z_min, z_max = np.nanmin(data), np.nanmax(data)
-		
-		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
-		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
-
-		# Set extend
-		if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
-			params['extend'] = 'neither'
-			if (cbar_min > z_min):                      params['extend'] = 'min'
-			if (cbar_max < z_max):                      params['extend'] = 'max'
-			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
-
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
 		if len(data) == 0 : 
 			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size)
 		else:
+			# Set maximum and minimum
+			z_min, z_max = np.nanmin(data), np.nanmax(data)
+			
+			cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+			cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
+
+			# Set extend
+			if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
+				params['extend'] = 'neither'
+				if (cbar_min > z_min):                      params['extend'] = 'min'
+				if (cbar_max < z_max):                      params['extend'] = 'max'
+				if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
+
 			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size,
 											c=data,
 											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
@@ -830,19 +830,6 @@ class MapPlotter():
 		'''
 		self.plot_empty(params=params,clear=clear)
 
-		# Set maximum and minimum
-		z_min, z_max = np.nanmin(data), np.nanmax(data)
-		
-		cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
-		cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
-
-		# Set extend
-		if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
-			params['extend'] = 'neither'
-			if (cbar_min > z_min):                      params['extend'] = 'min'
-			if (cbar_max < z_max):                      params['extend'] = 'max'
-			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
-
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
 		if len(data) == 0 : 
@@ -850,6 +837,19 @@ class MapPlotter():
 										 transform=transform,scale=scale,color=color,
 										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']))
 		else:
+			# Set maximum and minimum
+			z_min, z_max = np.nanmin(data), np.nanmax(data)
+			
+			cbar_min = params['bounds'][0] if params['bounds'][0] is not None else z_min
+			cbar_max = params['bounds'][1] if params['bounds'][1] is not None else z_max
+
+			# Set extend
+			if params['extend'] == None and data.dtype in [np.int32,np.int64,np.float32,np.double]:
+				params['extend'] = 'neither'
+				if (cbar_min > z_min):                      params['extend'] = 'min'
+				if (cbar_max < z_max):                      params['extend'] = 'max'
+				if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
+			
 			self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],data[::dsample,::dsample],
 				                         transform=transform,scale=scale,
 										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
