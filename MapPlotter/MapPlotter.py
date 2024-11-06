@@ -205,7 +205,7 @@ class MapPlotter():
 		if self._fig and self._ax:# and self._plot:
 			self._fig.savefig(filename,dpi=dpi,bbox_inches=margin)
 
-	def clear():
+	def clear(self):
 		'''
 		Wrapper to matplotlib.pyplot.clf()
 		'''
@@ -232,16 +232,16 @@ class MapPlotter():
 			fig = plt.figure(figsize=sz,dpi=dpi,facecolor='w',edgecolor='k')
 		return fig
 
-	def createAxes(self):
+	def createAxes(self,fig=None):
 		'''
 		Create new axes.
 
 		Outputs:
 			> Axes object
 		'''
-		return plt.axes(projection=self._projection)
+		return plt.axes(projection=self._projection) if fig is None else fig.add_axes(projection=self._projection)
 
-	def createSubplot(self, *args, **kwargs):
+	def createSubplot(self, *args, fig=None, **kwargs):
 		'''
 		Create new subplot axes.
 
@@ -249,7 +249,7 @@ class MapPlotter():
 			> Axes object		
 		'''
 		kwargs['projection'] = self._projection
-		return plt.subplot(*args,**kwargs)
+		return plt.subplot(*args,**kwargs) if fig is None else fig.add_subplot(*args,**kwargs)
 
 	def createGridlines(self,xlim=[-180,180],ylim=[-90,90],axis_format='.1f',top=False,bottom=True,left=True,right=False,max_div=4,style={},gridlines_kwargs={'draw_labels':True,'linewidth':0}):
 		'''
@@ -624,7 +624,7 @@ class MapPlotter():
 		return self.plot(lon,lat,data,params=params,clear=clear,projection=projection,**kwargs)
 
 	def plot_from_file_and_mask(self,filename,varname,maskfile,iTime=0,iDepth=0,
-		masklon='glamt',masklat='gphit',params=None,clear=True):
+		masklon='glamt',masklat='gphit',params=None,projection='PlateCarree',clear=True,**kwargs):
 		'''
 		Plot function. Plots data given a NetCDF file, a mask file, the names of 
 		the variables as well as the current depth and time index.
