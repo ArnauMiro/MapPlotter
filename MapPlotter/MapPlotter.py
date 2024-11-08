@@ -666,7 +666,7 @@ class MapPlotter():
 		# Plot
 		return self.plot(lon,lat,data,params=params,clear=clear,projection=projection,**kwargs)
 
-	def scatter(self,xc,yc,data=np.array([]),params=None,clear=True,marker=None,size=None,projection='PlateCarree',**kwargs):
+	def scatter(self,xc,yc,data=np.array([]),params=None,clear=True,c=None,marker=None,size=None,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
@@ -688,7 +688,7 @@ class MapPlotter():
 		# Plot
 		transform  = getattr(ccrs,projection)(**kwargs)
 		if len(data) == 0 : 
-			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size)
+			self._plot = self._ax.scatter(xc,yc,c=c,transform=transform,marker=marker,s=size)
 		else:
 			# Set maximum and minimum
 			z_min, z_max = np.nanmin(data), np.nanmax(data)
@@ -704,7 +704,7 @@ class MapPlotter():
 				if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
 
 			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size,
-											c=data,
+											c=data if c is None else c,
 											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
 											norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
 										 )
