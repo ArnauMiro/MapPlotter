@@ -16,6 +16,24 @@ import cartopy.crs as ccrs, cartopy.feature as cfeature, cartopy.io.img_tiles as
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from datetime import datetime
 
+# Parameters for a scatter plot
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html
+_scatterParams = {
+	's'             : None, 
+	'c'             : None,
+	'marker'        : None, 
+	'cmap'          : None, 
+	'norm'          : None, 
+	'vmin'          : None, 
+	'vmax'          : None, 
+	'alpha'         : None, 
+	'linewidths'    : None, 
+	'edgecolors'    : None, 
+	'colorizer'     : None, 
+	'plotnonfinite' : False, 
+	'data'          : None,
+}
+
 
 class MapPlotter():
 	'''
@@ -146,6 +164,13 @@ class MapPlotter():
 		return params
 
 	@staticmethod
+	def scatterParams():
+		'''
+		Standard parameters for scatter plot
+		'''
+		return _scatterParams
+
+	@staticmethod
 	def loadParams(filename):
 		'''
 		Load params dictionary from file
@@ -193,7 +218,7 @@ class MapPlotter():
 	def fmax(f,x):
 		return (1.+f if x > 0 else 1.-f)*x
 
-	def save(self,filename,dpi=300,margin='tight'):
+	def save(self,filename,*,dpi=300,margin='tight'):
 		'''
 		Save figure to disk.
 
@@ -211,7 +236,7 @@ class MapPlotter():
 		'''
 		self._fig.clf()
 
-	def createFigure(self,sz=(8,6),dpi=100,style=None):
+	def createFigure(self,*,sz=(8,6),dpi=100,style=None):
 		'''
 		Create a new figure.
 
@@ -251,7 +276,7 @@ class MapPlotter():
 		kwargs['projection'] = self._projection
 		return plt.subplot(*args,**kwargs) if fig is None else fig.add_subplot(*args,**kwargs)
 
-	def createGridlines(self,xlim=[-180,180],ylim=[-90,90],axis_format='.1f',top=False,bottom=True,left=True,right=False,max_div=4,style={},gridlines_kwargs={'draw_labels':True,'linewidth':0}):
+	def createGridlines(self,*,xlim=[-180,180],ylim=[-90,90],axis_format='.1f',top=False,bottom=True,left=True,right=False,max_div=4,style={},gridlines_kwargs={'draw_labels':True,'linewidth':0}):
 		'''
 		Create gridlines for the current axes.
 
@@ -335,7 +360,7 @@ class MapPlotter():
 			transform = getattr(ccrs,projection)(**kwargs)
 			self._ax.set_extent(ext,transform)
 
-	def drawCoastline(self,res='50m',color=(0,0,0,1),linewidth=.75):
+	def drawCoastline(self,*,res='50m',color=(0,0,0,1),linewidth=.75):
 		'''
 		Draws the coastline using Natural Earth Features.
 
@@ -350,7 +375,7 @@ class MapPlotter():
 					edgecolor=color, facecolor='none', linewidth=linewidth)
 				)
 
-	def drawContinentBorders(self,res='50m',color=(0,0,0,.6),linewidth=.75):
+	def drawContinentBorders(self,*,res='50m',color=(0,0,0,.6),linewidth=.75):
 		'''
 		Draws the continent borders using Natural Earth Features.
 
@@ -365,7 +390,7 @@ class MapPlotter():
 					edgecolor=color, facecolor='none', linewidth=linewidth)
 				)
 
-	def drawRivers(self,res='50m',color=(0,0,.545,.75),linewidth=.5):
+	def drawRivers(self,*,res='50m',color=(0,0,.545,.75),linewidth=.5):
 		'''
 		Draws the rivers using Natural Earth Features.
 
@@ -443,7 +468,7 @@ class MapPlotter():
 			cmap.set_bad(color='k',alpha=0.)
 		return cmap
 
-	def setColorbar(self,orientation='horizontal',extend='neither',shrink=1.0,aspect=20,
+	def setColorbar(self,*,orientation='horizontal',extend='neither',shrink=1.0,aspect=20,
 		numticks=10,tick_format='%.2f',tick_font=None,label={}):
 		'''
 		Set the colorbar.
@@ -474,7 +499,7 @@ class MapPlotter():
 			cbar.update_ticks()
 		return cbar
 
-	def plot_empty(self,params=None,clear=True):
+	def plot_empty(self,*,params=None,clear=True):
 		'''
 		Plot the map with all the settings and without data.
 
@@ -666,7 +691,7 @@ class MapPlotter():
 		# Plot
 		return self.plot(lon,lat,data,params=params,clear=clear,projection=projection,**kwargs)
 
-	def scatter(self,xc,yc,data=np.array([]),params=None,clear=True,c=None,marker=None,size=None,projection='PlateCarree',**kwargs):
+	def scatter(self,xc,yc,data=np.array([]),*,params=None,clear=True,scatterParams=_scatterParams,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
@@ -686,10 +711,7 @@ class MapPlotter():
 		self.plot_empty(params=params,clear=clear)
 
 		# Plot
-		transform  = getattr(ccrs,projection)(**kwargs)
-		if len(data) == 0 : 
-			self._plot = self._ax.scatter(xc,yc,c=c,transform=transform,marker=marker,s=size)
-		else:
+		if len(data) > 0 : 
 			# Set maximum and minimum
 			z_min, z_max = np.nanmin(data), np.nanmax(data)
 			
@@ -703,22 +725,25 @@ class MapPlotter():
 				if (cbar_max < z_max):                      params['extend'] = 'max'
 				if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
 
-			self._plot = self._ax.scatter(xc,yc,transform=transform,marker=marker,s=size,
-											c=data if c is None else c,
-											cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
-											norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-										 )
-			# Colorbar
-			if params['draw_cbar']:
-				self.setColorbar(orientation=params['orientation'],
-							 	extend=params['extend'],
-							 	shrink=params['shrink'],
-							 	aspect=params['aspect'],
-							 	numticks=params['numticks'],
-							 	tick_format=params['tick_format'],
-							 	tick_font=params['tick_font'],
-							 	label=params['label']
-								)
+			scatterParams['c']    = data if scatterParams['c'] is None else scatterParams['c']
+			scatterParams['cmap'] = self.setColormap(cmap=params['cmap'],ncol=params['ncol'])
+			scatterParams['norm'] = matplotlib.colors.Normalize(cbar_min,cbar_max)
+			
+		# Scatter plot
+		scatterParams['transform'] = getattr(ccrs,projection)(**kwargs)
+		self._plot = self._ax.scatter(xc,yc,**scatterParams)
+
+		# Colorbar
+		if len(data) > 0 and params['draw_cbar']:
+			self.setColorbar(orientation=params['orientation'],
+						 	extend=params['extend'],
+						 	shrink=params['shrink'],
+						 	aspect=params['aspect'],
+						 	numticks=params['numticks'],
+						 	tick_format=params['tick_format'],
+						 	tick_font=params['tick_font'],
+						 	label=params['label']
+							)
 		return self._fig
 
 	def line(self,xc,yc,fmt='-',params=None,clear=True,size=None,projection='PlateCarree',**kwargs):
