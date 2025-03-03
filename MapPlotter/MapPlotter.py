@@ -13,8 +13,10 @@ from __future__ import print_function, division
 
 import json, numpy as np, matplotlib, matplotlib.pyplot as plt, netCDF4 as NC, cmocean
 import cartopy.crs as ccrs, cartopy.feature as cfeature, cartopy.io.img_tiles as cimgt
+
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-from datetime import datetime
+from datetime           import datetime
+
 
 # Parameters for a scatter plot
 # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html
@@ -31,6 +33,27 @@ _scatterParams = {
 	'edgecolors'    : None, 
 	'colorizer'     : None, 
 	'plotnonfinite' : False, 
+	'data'          : None,
+}
+
+# Parameters for line plot
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html
+_plotParams = {
+	'scalex'        : True, 
+	'scaley'        : True,
+	'data'          : None,
+}
+
+# Parameters for contour plot
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
+_contourParams= {
+	'levels'        : 10,
+	'data'          : None,
+}
+
+# Parameters for quiver plot
+# https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.quiver.html
+_quiverParams = {
 	'data'          : None,
 }
 
@@ -568,7 +591,7 @@ class MapPlotter():
 			> lat:        Latitude vector or matrix
 			> data:       Data matrix
 			> params:     (Optional) parameter dictionary
-			> clear:      (Optional) Clear axes before plotting
+			> clear:      (Optional) clear axes before plotting
 			> Projection: Type of projection that the data is
 						  using (default assumes PlateCarree)
 
@@ -627,7 +650,7 @@ class MapPlotter():
 			> iTime:      Time index for NetCDF (default: 0)
 			> iDepth:     Depth index for NetCDF (default: 0)
 			> params:     (Optional) parameter dictionary
-			> clear:      (Optional) Clear axes before plotting
+			> clear:      (Optional) clear axes before plotting
 			> Projection: Type of projection that the data is
 						  using (default assumes PlateCarree)
 
@@ -664,7 +687,7 @@ class MapPlotter():
 			> masklon:    Name of the longitude dimension (default: 'glamt')
 			> masklat:    Name of the latitude dimension (default: 'gphit')
 			> params:     (Optional) parameter dictionary
-			> clear:      (Optional) Clear axes before plotting
+			> clear:      (Optional) clear axes before plotting
 			> Projection: Type of projection that the data is
 						  using (default assumes PlateCarree)
 
@@ -691,19 +714,20 @@ class MapPlotter():
 		# Plot
 		return self.plot(lon,lat,data,params=params,clear=clear,projection=projection,**kwargs)
 
-	def scatter(self,xc,yc,data=np.array([]),*,params=None,clear=True,scatterParams=_scatterParams,projection='PlateCarree',**kwargs):
+	def scatter(self,xc,yc,data=np.array([]),*,params=None,scatterParams=_scatterParams,clear=True,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
 
 		Inputs:
-			> xc:     Scatter x points
-			> yc:     Scatter y points
-			> data:   Color data to be plotted
-			> params: Optional parameter dictionary
-			> clear:  Clear axes before plotting
-			> marker: Marker for scatter plot
-			> size:   Size for the scatter plot
+			> xc:            Scatter x points
+			> yc:            Scatter y points
+			> data:          Color data to be plotted
+			> params:        (Optional) parameter dictionary
+			> scatterParams: (Optional) parameter dictionary for scatter plot 
+			> clear:         (Optional) clear axes before plotting
+			> Projection:    Type of projection that the data is
+						     using (default assumes PlateCarree)
 
 		Outputs:
 			> Figure object
@@ -746,19 +770,20 @@ class MapPlotter():
 							)
 		return self._fig
 
-	def line(self,xc,yc,fmt='-',params=None,clear=True,size=None,projection='PlateCarree',**kwargs):
+	def line(self,xc,yc,fmt='-',*,params=None,plotParams=_plotParams,clear=True,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
 
 		Inputs:
-			> xc:     Scatter x points
-			> yc:     Scatter y points
-			> data:   Color data to be plotted
-			> params: Optional parameter dictionary
-			> clear:  Clear axes before plotting
-			> marker: Marker for scatter plot
-			> size:   Size for the scatter plot
+			> xc:         Scatter x points
+			> yc:         Scatter y points
+			> fmt:        Format string for data to be plotted
+			> params:     (Optional) parameter dictionary
+			> plotParams: (Optional) parameter dictionary for line plot 
+			> clear:      (Optional) clear axes before plotting
+			> Projection: Type of projection that the data is
+						  using (default assumes PlateCarree)
 
 		Outputs:
 			> Figure object
@@ -766,27 +791,27 @@ class MapPlotter():
 		self.plot_empty(params=params,clear=clear)
 
 		# Plot
-		transform  = getattr(ccrs,projection)(**kwargs)
-		self._plot = self._ax.plot(xc,yc,fmt,transform=transform,s=size)
+		plotParams['transform'] = getattr(ccrs,projection)(**kwargs)
+		self._plot = self._ax.plot(xc,yc,fmt,**plotParams)
 
 		return self._fig
 
-	def contour(self,lon,lat,data,levels=10,labelsize=None,linewidth=None,params=None,clear=True,projection='PlateCarree',**kwargs):
+	def contour(self,lon,lat,data,*,params=None,contourParams=_contourParams,labelsize=None,clear=True,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
 
 		Inputs:
-			> lon:        Longitude vector or matrix
-			> lat:        Latitude vector or matrix
-			> data:       Data matrix
-			> levels:     Number and positions of the contour lines / regions
-			> linewidth:  (Optional) The line width of the contour lines
-			> labelsize:  (Optional) Label font size for contour plot
-			> params:     (Optional) Parameter dictionary
-			> clear:      (Optional) Clear axes before plotting
-			> Projection: Type of projection that the data is
-						  using (default assumes PlateCarree)
+			> lon:           Longitude vector or matrix
+			> lat:           Latitude vector or matrix
+			> data:          Data matrix
+			> params:        (Optional) parameter dictionary
+			> contourParams: (Optional) parameter dictionary for contour plot 
+			> linewidth:     (Optional) the line width of the contour lines
+			> labelsize:     (Optional) label font size for contour plot
+			> clear:         (Optional) clear axes before plotting
+			> Projection:    Type of projection that the data is
+						     using (default assumes PlateCarree)
 
 		Outputs:
 			> Figure object
@@ -807,14 +832,11 @@ class MapPlotter():
 			if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
 
 		# Plot
-		transform  = getattr(ccrs,projection)(**kwargs)
-		self._plot = self._ax.contour(lon,lat,data,levels,
-										cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
-										norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-										linewidths=linewidth,
-										alpha=params['alpha'],
-										transform=transform
-					 				 )
+		contourParams['transform'] = getattr(ccrs,projection)(**kwargs)
+		contourParams['cmap']      = self.setColormap(cmap=params['cmap'],ncol=params['ncol'])
+		contourParams['alpha']     = params['alpha']
+		contourParams['norm']      = matplotlib.colors.Normalize(cbar_min,cbar_max)
+		self._plot = self._ax.contour(lon,lat,data,**contourParams)
 		
 		# Contour plot labels
 		if not labelsize is None:
@@ -834,34 +856,31 @@ class MapPlotter():
 
 		return self._fig
 
-	def quiver(self,xc,yc,uc,vc,dsample=1,data=np.array([]),params=None,clear=True,scale=None,color=None,projection='PlateCarree',**kwargs):
+	def quiver(self,xc,yc,uc,vc,data=np.array([]),*,dsample=1,params=None,quiverParams=_quiverParams,clear=True,projection='PlateCarree',**kwargs):
 		'''
 		Main plotting function. Plots given the longitude, latitude and data.
 		An optional params dictionary can be inputted to control the plot.
 
 		Inputs:
-			> xc:      X position of the arrow
-			> yc:      Y position of the arrow
-			> uc:      U component for the quiver
-			> yc:      V component for the quiver
-			> dsample: Downsample (>1 to downsample, use integers)
-			> data:    Color data to be plotted. If not provided the modulus is used
-			> params:  Optional parameter dictionary
-			> clear:   Clear axes before plotting
-			> color:   Color to plot (dones not work when data is specified)
+			> xc:           X position of the arrow
+			> yc:           Y position of the arrow
+			> uc:           U component for the quiver
+			> yc:           V component for the quiver
+			> data:         (Optional) color data to be plotted
+			> dsample:      (Optional) downsample (>1 to downsample, use integers)
+			> params:       (Optional) parameter dictionary
+			> quiverParams: (Optional) parameter dictionary for contour plot 
+			> clear:        (Optional) clear axes before plotting
+			> Projection:   Type of projection that the data is
+						    using (default assumes PlateCarree)
 
 		Outputs:
 			> Figure object
 		'''
 		self.plot_empty(params=params,clear=clear)
 
-		# Plot
-		transform  = getattr(ccrs,projection)(**kwargs)
-		if len(data) == 0 : 
-			self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],
-										 transform=transform,scale=scale,color=color,
-										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']))
-		else:
+		# Generating extents for data
+		if len(data) > 0 : 
 			# Set maximum and minimum
 			z_min, z_max = np.nanmin(data), np.nanmax(data)
 			
@@ -874,13 +893,9 @@ class MapPlotter():
 				if (cbar_min > z_min):                      params['extend'] = 'min'
 				if (cbar_max < z_max):                      params['extend'] = 'max'
 				if (cbar_min > z_min and cbar_max < z_max): params['extend'] = 'both'
-			
-			self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],data[::dsample,::dsample],
-				                         transform=transform,scale=scale,
-										 cmap=self.setColormap(cmap=params['cmap'],ncol=params['ncol']),
-										 norm=matplotlib.colors.Normalize(cbar_min,cbar_max),
-										)
 
+			quiverParams['norm'] = matplotlib.colors.Normalize(cbar_min,cbar_max)
+		
 			# Colorbar
 			if params['draw_cbar']:
 				self.setColorbar(orientation=params['orientation'],
@@ -892,5 +907,11 @@ class MapPlotter():
 								 tick_font=params['tick_font'],
 								 label=params['label']
 								)
+
+		# Plot
+		quiverParams['transform'] = getattr(ccrs,projection)(**kwargs)
+		quiverParams['cmap']      = self.setColormap(cmap=params['cmap'],ncol=params['ncol'])
+
+		self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],**quiverParams)
 
 		return self._fig
