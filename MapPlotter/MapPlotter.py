@@ -57,6 +57,8 @@ _quiverParams = {
 	'data'          : None,
 }
 
+Globe = getattr(ccrs,'Globe')
+
 
 class MapPlotter():
 	'''
@@ -240,7 +242,7 @@ class MapPlotter():
 	@staticmethod
 	def fmax(f,x):
 		return (1.+f if x > 0 else 1.-f)*x
-
+	
 	def save(self,filename,*,dpi=300,margin='tight'):
 		'''
 		Save figure to disk.
@@ -320,9 +322,9 @@ class MapPlotter():
 			# Axes limits
 #			self._ax.set_xlim(xlim)
 #			self._ax.set_ylim(ylim)
-			self._ax.set_extent(xlim+ylim,crs=ccrs.PlateCarree())
+			self._ax.set_extent(xlim+ylim,crs=ccrs.PlateCarree(globe=self._projection.globe))
 			# Grid lines
-			gl = self._ax.gridlines(crs=ccrs.PlateCarree(),**gridlines_kwargs)
+			gl = self._ax.gridlines(crs=ccrs.PlateCarree(globe=self._projection.globe),**gridlines_kwargs)
 			gl.xlocator      = matplotlib.ticker.FixedLocator(np.arange(xlim[0],xlim[1],(xlim[1]-xlim[0])/max_div))
 			gl.ylocator      = matplotlib.ticker.FixedLocator(np.arange(ylim[0],ylim[1],(ylim[1]-ylim[0])/max_div))
 			gl.xformatter    = LongitudeFormatter(number_format=axis_format,
@@ -621,7 +623,7 @@ class MapPlotter():
 					alpha=params['alpha'],
 					shading='auto',
 					transform=transform
-					 		 )
+		)
 
 		# Colorbar
 		if params['draw_cbar']:
@@ -633,7 +635,7 @@ class MapPlotter():
 							 tick_format=params['tick_format'],
 							 tick_font=params['tick_font'],
 							 label=params['label']
-							)
+			)
 
 		return self._fig
 
@@ -915,3 +917,10 @@ class MapPlotter():
 		self._plot = self._ax.quiver(xc[::dsample],yc[::dsample],uc[::dsample,::dsample],vc[::dsample,::dsample],**quiverParams)
 
 		return self._fig
+	
+	def text(self,x,y,s,fontdict=None,projection='PlateCarree',tkwargs={},**kwargs):
+		'''
+		Append text in the axes.
+		'''
+		transform = getattr(ccrs,projection)(**kwargs)
+		self._ax.text(x,y,s,fontdict=fontdict,transform=transform,**tkwargs)

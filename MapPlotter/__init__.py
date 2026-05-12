@@ -48,4 +48,4 @@ Map Plotter is a toolkit that provides a framework for
 '''
 __version__ = "2.2.5"
 
-from .MapPlotter import MapPlotter
+from .MapPlotter import MapPlotter, Globe
