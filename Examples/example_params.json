@@ -6,7 +6,7 @@
 	"style": null,
 	"xlim": [-180, 180],
 	"ylim": [-90, 90],
-	"max_div": 4,
+	"max_div": [4,4],
 	"top_label": false,
 	"bottom_label": true,
 	"right_label": false,

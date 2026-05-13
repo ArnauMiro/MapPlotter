@@ -57,6 +57,17 @@ _quiverParams = {
 	'data'          : None,
 }
 
+_axis_format = {
+	'direction_label' : True,
+	'number_format'   : '.1f',
+	'degree_symbol'   : '$\degree$'
+}
+
+_gridlines_kwargs = {
+	'draw_labels':True,
+	'linewidth':0
+}
+
 Globe = getattr(ccrs,'Globe')
 
 
@@ -152,14 +163,14 @@ class MapPlotter():
 			# Axes params
 			'xlim'        : [-180,180],
 			'ylim'        : [-90,90],
-			'max_div'     : 4,
-			'axis_format' : '.1f',
+			'max_div'     : [4,4],
+			'axis_format' : _axis_format,
 			'top_label'   : False,
 			'bottom_label': True,
 			'right_label' : False,
 			'left_label'  : True,
 			'grdstyle'    : {},
-			'grdargs'     : {'draw_labels':True,'linewidth':0},
+			'grdargs'     : _gridlines_kwargs,
 			'features'    : ['coastline','continents','rivers','image'],
 			'res'         : '50m',
 			'img'         : None,
@@ -301,7 +312,7 @@ class MapPlotter():
 		kwargs['projection'] = self._projection
 		return plt.subplot(*args,**kwargs) if fig is None else fig.add_subplot(*args,**kwargs)
 
-	def createGridlines(self,*,xlim=[-180,180],ylim=[-90,90],axis_format='.1f',top=False,bottom=True,left=True,right=False,max_div=4,style={},gridlines_kwargs={'draw_labels':True,'linewidth':0}):
+	def createGridlines(self,*,xlim=[-180,180],ylim=[-90,90],axis_format=_axis_format,top=False,bottom=True,left=True,right=False,max_div=[4,4],style={},gridlines_kwargs=_gridlines_kwargs):
 		'''
 		Create gridlines for the current axes.
 
@@ -310,7 +321,7 @@ class MapPlotter():
 			> ylim:             Minimum and maximum extend for the y axis (default: [-90,90])
 			> top:              Display labels at the top (default: False)
 			> right:            Display labels at the right (default: False)
-			> max_div:          Maximum number of divisions on the axes (defaut: 4).
+			> max_div:          Maximum number of divisions on the axes (defaut: [4,4]).
 			> style:            Style dictionary for the axis labels.
 			> gridlines_kwargs: Extra gridlines arguments dictionary.
 
@@ -325,12 +336,10 @@ class MapPlotter():
 			self._ax.set_extent(xlim+ylim,crs=ccrs.PlateCarree(globe=self._projection.globe))
 			# Grid lines
 			gl = self._ax.gridlines(crs=ccrs.PlateCarree(globe=self._projection.globe),**gridlines_kwargs)
-			gl.xlocator      = matplotlib.ticker.FixedLocator(np.arange(xlim[0],xlim[1],(xlim[1]-xlim[0])/max_div))
-			gl.ylocator      = matplotlib.ticker.FixedLocator(np.arange(ylim[0],ylim[1],(ylim[1]-ylim[0])/max_div))
-			gl.xformatter    = LongitudeFormatter(number_format=axis_format,
-												  degree_symbol='$^\circ$')
-			gl.yformatter    = LatitudeFormatter(number_format=axis_format,
-												 degree_symbol='$^\circ$')
+			gl.xlocator      = matplotlib.ticker.FixedLocator(np.arange(xlim[0],xlim[1],(xlim[1]-xlim[0])/max_div[0]))
+			gl.ylocator      = matplotlib.ticker.FixedLocator(np.arange(ylim[0],ylim[1],(ylim[1]-ylim[0])/max_div[1]))
+			gl.xformatter    = LongitudeFormatter(**axis_format)
+			gl.yformatter    = LatitudeFormatter(**axis_format)
 			gl.top_labels    = top
 			gl.bottom_labels = bottom
 			gl.xlabel_style  = style
@@ -923,4 +932,4 @@ class MapPlotter():
 		Append text in the axes.
 		'''
 		transform = getattr(ccrs,projection)(**kwargs)
-		self._ax.text(x,y,s,fontdict=fontdict,transform=transform,**tkwargs)
+		return self._ax.text(x,y,s,fontdict=fontdict,transform=transform,**tkwargs)
